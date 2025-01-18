@@ -54,7 +54,7 @@ def main():
     # Compila il modello
     model.compile(optimizer=Adam(learning_rate=0.001), loss='categorical_crossentropy', metrics=['accuracy'])
 
-    num_epochs = 10
+    num_epochs = 20
     patience = 3
     model_num = 1
 
@@ -75,7 +75,7 @@ def main():
 
     # Addestra il modello
     print("Addestramento del modello...")
-    num_epochs = 10
+    num_epochs = 20
     early_stopping = Truepatience = 3
     model_num = 1
 
