@@ -17,7 +17,10 @@ from functions.dataloader import load_dataset
 from functions.accuracy_and_loss import plot_loss, plot_accuracy, plot_training_history
 from functions.training import train_mushrooms_model, evaluate_mushrooms_model
 from functions.prediction import test_model
+#from functions.modelCNN_mobilenet import model_with_mobilenet
+#from functions.modelCNN import model_1
 #from functions.move_images_back import move_images_back_to_source
+
 def main():
     # Percorsi principali
     source_dir = "/Users/stefanomorici/Desktop/AiLab project testing/MushroomAnalyzer/Dataset/MIND.Funga_Dataset"
@@ -38,6 +41,17 @@ def main():
     with open('class_indices.json', 'w') as f:
         json.dump(train_set.class_indices, f)
 
+    
+
+    # Creazione modello
+    #model = model_with_mobilenet(image_size, num_classes)
+
+
+    # Inizializzazione modello CNN
+    #print("creazione del modello...")
+    #model = model_1(image_size=(224, 224, 3), num_classes = len(train_set.class_indices))
+
+
     # Inizializza il modello
     print("Creazione del modello...")
     base_model = MobileNetV2(weights='imagenet', include_top=False, input_shape=(224, 224, 3))
@@ -51,11 +65,10 @@ def main():
     output = tf.keras.layers.Dense(len(train_set.class_indices), activation='softmax')(x)
     model = tf.keras.models.Model(inputs=base_model.input, outputs=output)
 
-    # Compila il modello
-    model.compile(optimizer=Adam(learning_rate=0.001), loss='categorical_crossentropy', metrics=['accuracy'])
+    model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
 
     num_epochs = 20
-    patience = 3
+    patience = 5
     model_num = 1
 
     # Configura le callback
@@ -76,7 +89,7 @@ def main():
     # Addestra il modello
     print("Addestramento del modello...")
     num_epochs = 20
-    early_stopping = Truepatience = 3
+    early_stopping = Truepatience = 5
     model_num = 1
 
     history, model_path, early_stop = train_mushrooms_model(
@@ -104,7 +117,7 @@ def main():
 
     # Testa un'immagine singola
     print("Test di un'immagine...")
-    test_image_path = "MushroomAnalyzer/test/hygrocybe_hololeuca.jpg"  # percorso immagine di test
+    test_image_path = "MushroomAnalyzer/test/stropharia_rugosaannulata.jpg"  # percorso immagine di test
     predicted_class = test_model(model_path, train_set, image_size, test_image_path)
     print(f"Predizione: {predicted_class}")
 

@@ -1,4 +1,6 @@
 from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
+from sklearn.utils.class_weight import compute_class_weight
+import numpy as np
 
 def train_mushrooms_model(model, train_data, validation_data, use_early_stopping, patience, model_id, epochs):
     """
@@ -13,6 +15,12 @@ def train_mushrooms_model(model, train_data, validation_data, use_early_stopping
     - model_id: identificativo numerico per il salvataggio del modello
     - epochs: numero massimo di epoche per il training 
     """
+
+    # Calcola i pesi delle classi in base ai dati di training
+    class_labels = train_data.classes       # etichette per ogni immagine
+    class_weights = compute_class_weight('balanced', classes=np.unique(class_labels), y=class_labels)   
+    class_weights = dict(enumerate(class_weights))  # conversione in dizionario
+
     # Configurazione Early Stopping
     early_stop = None
     if use_early_stopping:
@@ -44,7 +52,8 @@ def train_mushrooms_model(model, train_data, validation_data, use_early_stopping
         train_data,                        # Dati di training
         validation_data=validation_data,  # Dati di validation
         callbacks=callbacks,               # Callback configurati
-        epochs=epochs                      # Numero di epoche
+        epochs=epochs,                      # Numero di epoche
+        class_weight=class_weights         # Pesi delle classi
     )
 
     return history, model_filename, early_stop

@@ -12,6 +12,9 @@ def load_dataset(training_path, validation_path, target_size, batch_size):
         horizontal_flip=True   # Inversione orizzontale casuale
     )
 
+    #Generatore di immagini per il validation set senza augmentation
+    val_preprocessing = ImageDataGenerator(rescale=1./255)
+
     print('\n--- Preparazione del TRAINING SET ---')
     train_data = augmentation.flow_from_directory(
         training_path,
