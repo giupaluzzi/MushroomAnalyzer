@@ -16,8 +16,9 @@ def train_mushrooms_model(model, train_data, validation_data, use_early_stopping
     - epochs: numero massimo di epoche per il training 
     """
 
+    class_labels = train_data.classes
+
     # Calcola i pesi delle classi in base ai dati di training
-    class_labels = train_data.classes       # etichette per ogni immagine
     class_weights = compute_class_weight('balanced', classes=np.unique(class_labels), y=class_labels)   
     class_weights = dict(enumerate(class_weights))  # conversione in dizionario
 

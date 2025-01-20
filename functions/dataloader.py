@@ -1,6 +1,6 @@
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
 
-def load_dataset(training_path, validation_path, target_size, batch_size):
+def load_dataset(training_path, validation_path, test_path, target_size, batch_size):
     """
     Carica i dati di training e validation applicando data augmentation.
     """
@@ -25,14 +25,23 @@ def load_dataset(training_path, validation_path, target_size, batch_size):
     )
 
     print('\n--- Preparazione del VALIDATION SET ---')
-    val_data = augmentation.flow_from_directory(
+    val_data = val_preprocessing.flow_from_directory(
         validation_path,
         target_size=(target_size[0], target_size[1]),  # Ridimensiona immagini
         batch_size=batch_size,                         # Batch size per validation
         class_mode='categorical',                      # Classificazione multiclasse
         color_mode='rgb'                               # Immagini a colori
     )
+
+    print('\n--- Preparazione del TEST SET ---')
+    test_data = val_preprocessing.flow_from_directory(
+        test_path,
+        target_size=(target_size[0], target_size[1]),
+        batch_size=batch_size,
+        class_mode='categorical',
+        color_mode='rgb'
+    )
     
-    return train_data, val_data
+    return train_data, val_data, test_data
 
 

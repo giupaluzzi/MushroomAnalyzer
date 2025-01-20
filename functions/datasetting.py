@@ -2,7 +2,7 @@ import os
 import random
 import shutil
 
-def split_dataset(source_dir, train_dir, val_dir, test_ratio=0.2):
+def split_dataset(source_dir, train_dir, val_dir, test_dir, test_ratio=0.2):
     """
     Suddivide un dataset in training set e validation set.
     
@@ -15,9 +15,10 @@ def split_dataset(source_dir, train_dir, val_dir, test_ratio=0.2):
     Returns:
         None
     """
-    # Crea le directory per training e validation set, se non esistono
+    # Crea le directory per training e validation set, test set se non esistono
     os.makedirs(train_dir, exist_ok=True)
     os.makedirs(val_dir, exist_ok=True)
+    os.makedirs(test_dir, exist_ok=True)
 
     # Itera su tutte le sottocartelle nella directory sorgente
     class_dirs = [d for d in os.listdir(source_dir) if os.path.isdir(os.path.join(source_dir, d))]
@@ -28,8 +29,11 @@ def split_dataset(source_dir, train_dir, val_dir, test_ratio=0.2):
         # Percorsi delle sottodirectory per la classe
         train_class_path = os.path.join(train_dir, class_name)
         val_class_path = os.path.join(val_dir, class_name)
+        test_class_path = os.path.join(test_dir, class_name)
+
         os.makedirs(train_class_path, exist_ok=True)
         os.makedirs(val_class_path, exist_ok=True)
+        os.makedirs(test_class_path, exist_ok=True)
 
         # Elenco di tutti i file immagine nella sottodirectory della classe
         all_images = [f for f in os.listdir(source_class_path) if os.path.isfile(os.path.join(source_class_path, f))]
@@ -37,25 +41,39 @@ def split_dataset(source_dir, train_dir, val_dir, test_ratio=0.2):
         # Mescola casualmente le immagini
         random.shuffle(all_images)
 
-        # Determina il numero di immagini per il training set
-        split_index = int(len(all_images) * test_ratio)
-        train_images = all_images[:split_index]
-        val_images = all_images[split_index:]
+        # Determina il numero di immagini per ciascun set
+        test_split_index = int(len(all_images) * test_ratio)    # 20% per il test set
+        val_split_index = int(len(all_images) * (1-test_ratio) * 0.2)   # 20% del resto per il validation set
 
-        # Sposta i file nel training set
+        # Suddividi le immagini
+        test_images = all_images[:test_split_index]
+        remaining_images = all_images[test_split_index:]
+        val_images = remaining_images[:val_split_index]
+        train_images = remaining_images[val_split_index:]
+
+        # Sposta le immagini nel rispoettivo set
         for image in train_images:
             shutil.move(
                 os.path.join(source_class_path, image),
                 os.path.join(train_class_path, image)
             )
-
-        # Sposta i file nel validation set
+        
         for image in val_images:
             shutil.move(
                 os.path.join(source_class_path, image),
                 os.path.join(val_class_path, image)
             )
 
-        print(f"Classe '{class_name}': {len(train_images)} immagini nel training set, {len(val_images)} nel validation set.")
+        for image in test_images:
+            shutil.move(
+                os.path.join(source_class_path, image),
+                os.path.join(test_class_path, image)
+            )
+        
+        print(f"Classe '{class_name}': {len(train_images)} immagini nel training set, {len(val_images)} nel validation set, {len(test_images)} nel test set.")
 
     print("Suddivisione del dataset completata.")
+
+        
+        
+        

@@ -41,7 +41,7 @@ def image_testing(model_path, image_path, image_size):
 
 # Percorsi
 model_path = "Mushrooms_model_1.h5"  # Modifica con il percorso corretto del tuo modello
-image_path = "Mushroom_Dataset_Training/Panus velutinus/01-DS2116 (4).jpg"
+image_path = "MushroomAnalyzer/test/stropharia_rugosaannulata.jpg"
 image_size = (224, 224)
 
 # Test e visualizzazione dell'immagine

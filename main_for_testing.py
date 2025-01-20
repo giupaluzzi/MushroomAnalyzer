@@ -17,34 +17,31 @@ from functions.dataloader import load_dataset
 from functions.accuracy_and_loss import plot_loss, plot_accuracy, plot_training_history
 from functions.training import train_mushrooms_model, evaluate_mushrooms_model
 from functions.prediction import test_model
+from functions.confusion_matrix import plot_confusion_matrix
 #from functions.modelCNN_mobilenet import model_with_mobilenet
 #from functions.modelCNN import model_1
 #from functions.move_images_back import move_images_back_to_source
 
 def main():
     # Percorsi principali
-    source_dir = "/Users/stefanomorici/Desktop/AiLab project testing/MushroomAnalyzer/Dataset/MIND.Funga_Dataset"
+    source_dir = "/Users/stefanomorici/Desktop/AiLab project/MushroomAnalyzer/Dataset/MIND.Funga_Dataset"
     train_dir = "Mushroom_Dataset_Training"
     val_dir = "Mushroom_Dataset_Validation"
+    test_dir = "Mushroom_Dataset_Test"
 
     # Suddivisione 80% training e 20% validation
-    split_dataset(source_dir, train_dir, val_dir, test_ratio=0.2)
+    split_dataset(source_dir, train_dir, val_dir, test_dir, test_ratio=0.2)
 
   
     # Carica i dati
     image_size = (224, 224)  # Dimensioni immagine richieste dal modello
     batch_size = 32          # Dimensione batch
     print("Caricamento dei dati di training e validazione...")
-    train_set, val_set = load_dataset(train_dir, val_dir, image_size, batch_size)
+    train_set, val_set, test_set = load_dataset(train_dir, val_dir, test_dir, image_size, batch_size)
 
     # Salva le classi in un file JSON
     with open('class_indices.json', 'w') as f:
         json.dump(train_set.class_indices, f)
-
-    
-
-    # Creazione modello
-    #model = model_with_mobilenet(image_size, num_classes)
 
 
     # Inizializzazione modello CNN
@@ -68,7 +65,7 @@ def main():
     model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
 
     num_epochs = 20
-    patience = 5
+    patience = 3
     model_num = 1
 
     # Configura le callback
@@ -89,7 +86,7 @@ def main():
     # Addestra il modello
     print("Addestramento del modello...")
     num_epochs = 20
-    early_stopping = Truepatience = 5
+    early_stopping = Truepatience = 3
     model_num = 1
 
     history, model_path, early_stop = train_mushrooms_model(
@@ -107,17 +104,18 @@ def main():
     print("Valutazione del modello...")
     evaluate_mushrooms_model(model, train_set, val_set)
 
+    # Calcolo della confusion matrix
+    print("Generazione della Confusion Matrix...")
+    plot_confusion_matrix(model, test_set)
+
     # Visualizza i risultati dell'addestramento
     print("Tracciamento della cronologia...")
     plot_training_history(history)
 
-    # Restituisci le immagini alla cartella principale
-    #move_images_back_to_source(source_dir, train_dir, val_dir)
-
 
     # Testa un'immagine singola
     print("Test di un'immagine...")
-    test_image_path = "MushroomAnalyzer/test/stropharia_rugosaannulata.jpg"  # percorso immagine di test
+    test_image_path = "MushroomAnalyzer/test/tulostoma_exasperatum.jpg"  # percorso immagine di test
     predicted_class = test_model(model_path, train_set, image_size, test_image_path)
     print(f"Predizione: {predicted_class}")
 
