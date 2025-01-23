@@ -24,10 +24,10 @@ from functions.confusion_matrix import plot_confusion_matrix
 
 def main():
     # Percorsi principali
-    source_dir = "/Users/stefanomorici/Desktop/AiLab project/MushroomAnalyzer/Dataset/MIND.Funga_Dataset"
-    train_dir = "Mushroom_Dataset_Training"
-    val_dir = "Mushroom_Dataset_Validation"
-    test_dir = "Mushroom_Dataset_Test"
+    source_dir = "Dataset/MIND.Funga_Dataset"
+    train_dir = "Dataset/Mushroom_Dataset_Training"
+    val_dir = "Dataset/Mushroom_Dataset_Validation"
+    test_dir = "Dataset/Mushroom_Dataset_Test"
 
     # Suddivisione 80% training e 20% validation
     split_dataset(source_dir, train_dir, val_dir, test_dir, test_ratio=0.2)
@@ -65,7 +65,7 @@ def main():
     model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
 
     num_epochs = 20
-    patience = 3
+    patience = 5
     model_num = 1
 
     # Configura le callback
@@ -86,7 +86,7 @@ def main():
     # Addestra il modello
     print("Addestramento del modello...")
     num_epochs = 20
-    early_stopping = Truepatience = 3
+    early_stopping = Truepatience = 5
     model_num = 1
 
     history, model_path, early_stop = train_mushrooms_model(
@@ -106,7 +106,7 @@ def main():
 
     # Calcolo della confusion matrix
     print("Generazione della Confusion Matrix...")
-    plot_confusion_matrix(model, test_set)
+    plot_confusion_matrix(model, test_set, top_n=10)
 
     # Visualizza i risultati dell'addestramento
     print("Tracciamento della cronologia...")
