@@ -59,7 +59,7 @@ def main():
     output = tf.keras.layers.Dense(len(train_set.class_indices), activation='softmax')(x)
     model = tf.keras.models.Model(inputs=base_model.input, outputs=output)
 
-    model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
+    model.compile(optimizer=tf.keras.optimizers.Adam(lr=0.0001), loss='categorical_crossentropy', metrics=['accuracy'])
 
     num_epochs = 20
     patience = 5
