@@ -1,17 +1,17 @@
 import os
 import json 
 import tensorflow as tf
-from tensorflow.keras.models import load_model
-from tensorflow.keras.optimizers import Adam
-from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
-from tensorflow.keras.applications import MobileNetV2
+from keras.models import load_model
+#from keras.applications import Adam
+from keras.callbacks import EarlyStopping, ModelCheckpoint
+from keras.applications import MobileNetV2
 
-# Visualizza il risultato con un grafico
+
 import matplotlib.pyplot as plt
-from tensorflow.keras.preprocessing import image
+from keras.utils import img_to_array, load_img
 import numpy as np
 
-# Importa le funzioni implementate
+
 from functions.datasetting import split_dataset
 from functions.dataloader import load_dataset
 from functions.accuracy_and_loss import plot_loss, plot_accuracy, plot_training_history
@@ -21,51 +21,54 @@ from functions.prediction import test_model
 
 
 def main():
-    # Percorsi principali
-    source_dir = "Dataset/MIND.Funga_Dataset"
-    train_dir = "Dataset/Mushroom_Dataset_Training"
-    val_dir = "Dataset/Mushroom_Dataset_Validation"
+    # Main directories
+    source_dir = "Dataset/MIND.Funga_Dataset"                               # Source dataset directory
+    train_dir = "MushroomAnalyzer/Dataset/Mushroom_Dataset_Training"        # Training set directory
+    val_dir = "MushroomAnalyzer/Dataset/Mushroom_Dataset_Validation"        # Validation set directory
 
-    # Suddivisione 80% training e 20% validation
-    split_dataset(source_dir, train_dir, val_dir, test_ratio=0.2)
+    # Split the dataset
+    #split_dataset(source_dir, train_dir, val_dir, test_ratio=0.2)
 
   
-    # Carica i dati
-    image_size = (224, 224)  # Dimensioni immagine richieste dal modello
-    batch_size = 32          # Dimensione batch
-    print("Caricamento dei dati di training e validazione...")
+    # Load training and validation datasets
+    image_size = (224, 224)  # Required image dimensions for the model
+    batch_size = 32          # Batch size for training
+    print("Loading training and validation datasets")
     train_set, val_set = load_dataset(train_dir, val_dir, image_size, batch_size)
 
-    # Salva le classi in un file JSON
+    # Save class indices to a JSON file
     with open('class_indices.json', 'w') as f:
         json.dump(train_set.class_indices, f)
 
 
-    # Inizializzazione modello CNN
-    #print("creazione del modello...")
+    # Inizialize CNN model
+    #print("Creating the model")
     #model = model_1(image_size=(224, 224, 3), num_classes = len(train_set.class_indices))
 
 
-    # Inizializza il modello
-    print("Creazione del modello...")
+    # Inizialize ImageNet model
+    print("Creating the model")
     base_model = MobileNetV2(weights='imagenet', include_top=False, input_shape=(224, 224, 3))
     for layer in base_model.layers:
-        layer.trainable = False  # Congela i layer pre-addestrati
+        layer.trainable = False  # Freeze pre-trained layers
+
     
-    # Aggiungi strati personalizzati
+    # Add custom layers
     x = tf.keras.layers.GlobalAveragePooling2D()(base_model.output)
     x = tf.keras.layers.Dense(128, activation='relu')(x)
     x = tf.keras.layers.Dropout(0.3)(x)
     output = tf.keras.layers.Dense(len(train_set.class_indices), activation='softmax')(x)
     model = tf.keras.models.Model(inputs=base_model.input, outputs=output)
 
-    model.compile(optimizer=tf.keras.optimizers.Adam(lr=0.0001), loss='categorical_crossentropy', metrics=['accuracy'])
+    # Compile the model
+    model.compile(optimizer=tf.keras.optimizers.Adam(lr=0.001), loss='categorical_crossentropy', metrics=['accuracy'])
 
-    num_epochs = 20
+    # Training configuration
+    num_epochs = 3
     patience = 5
-    model_num = 1
+    model_num = 4
 
-    # Configura le callback
+    # Configure the callbacks
     early_stopping_callback = EarlyStopping(
         monitor="val_loss", 
         patience=patience, 
@@ -74,17 +77,15 @@ def main():
 )
 
     model_checkpoint_callback = ModelCheckpoint(
-        filepath=f"best_model_{model_num}.h5",  # Salva il miglior modello in base alla validation loss
+        filepath=f"best_model_{model_num}.h5",  # Save the best model based on validation loss
         monitor="val_loss",
         save_best_only=True,
         verbose=1
 )
 
-    # Addestra il modello
-    print("Addestramento del modello...")
-    num_epochs = 20
+    # Train the model
+    print("Training the model")
     early_stopping = Truepatience = 5
-    model_num = 1
 
     history, model_path, early_stop = train_mushrooms_model(
         model=model,
@@ -97,40 +98,40 @@ def main():
 )
 
 
-    # Valuta il modello
-    print("Valutazione del modello...")
+    # Evaluate the model
+    print("Evaluating the model")
     evaluate_mushrooms_model(model, train_set, val_set)
 
 
-    # Visualizza i risultati dell'addestramento
-    print("Tracciamento della cronologia...")
+    # Plot training history
+    print("Plotting training history")
     plot_training_history(history)
 
 
-    # Testa un'immagine singola
-    print("Test di un'immagine...")
-    test_image_path = "MushroomAnalyzer/test/tulostoma_exasperatum.jpg"  # percorso immagine di test
+    # Test an image
+    print("Testing an image")
+    test_image_path = "MushroomAnalyzer/test/tulostoma_exasperatum.jpg"  # Path of the test image
     predicted_class = test_model(model_path, train_set, image_size, test_image_path)
-    print(f"Predizione: {predicted_class}")
+    print(f"Prediction: {predicted_class}")
 
     
 
-    # Carica l'immagine per visualizzarla
-    img = image.load_img(test_image_path, target_size=image_size)
-    img_array = image.img_to_array(img) / 255.0  # Normalizza l'immagine
+    # Load the image for display
+    img = load_img(test_image_path, target_size=image_size)
+    img_array = img_to_array(img) / 255.0  # Normalize the image
 
-    # Previsione del modello
+    # Model prediction
     prediction = model.predict(np.expand_dims(img_array, axis=0))
-    predicted_class_idx = np.argmax(prediction)  # Indice della classe predetta
+    predicted_class_idx = np.argmax(prediction)  # Index of predicted class
 
-    # Ottieni la classe associata all'indice
+    # Get the class name associated with the predicted index
     predicted_class_name = list(train_set.class_indices.keys())[predicted_class_idx]
 
-    # Visualizza il grafico dell'immagine e la predizione
+    # Display the image with the prediction
     plt.figure(figsize=(6, 6))
     plt.imshow(img)
-    plt.title(f"Predizione: {predicted_class_name}")
-    plt.axis('off')  # Non mostrare gli assi
+    plt.title(f"Prediction: {predicted_class_name}")
+    plt.axis('off')  
     plt.show()
 
 if __name__ == "__main__":
