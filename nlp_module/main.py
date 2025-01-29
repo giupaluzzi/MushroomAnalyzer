@@ -9,8 +9,8 @@ def main():
     if data is None:
         return
     
-    X = data['Characteristics'].apply(clean_text)
-    y = data['Toxicity']
+    X = data['Description'].apply(clean_text)
+    y = data['Species']
 
     model = train_and_evaluate_model(X, y)
 
