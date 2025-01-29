@@ -167,4 +167,4 @@ def scrape_and_save(species_csv_path, output_csv_path):
 
 # Esegui lo scraping e salva i risultati
 logging.basicConfig(level=logging.INFO)  # Impostiamo il livello di log a INFO
-scrape_and_save("fungi_info.csv", "fungi_dataset.csv")
+scrape_and_save("nlp_module/fungi_info.csv", "nlp_module/fungi_dataset.csv")
