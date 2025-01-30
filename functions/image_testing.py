@@ -10,9 +10,6 @@ def image_testing(model_path, image_path, image_size):
     # Load the saved model
     model = load_model(model_path)
 
-    # Ricompila il modello per evitare l'avviso
-    # model.compile(optimizer="adam", loss="categorical_crossentropy", metrics=["accuracy"])
-
     # Load the dictionary with the classes
     with open('class_indices.json', 'r') as f:
         class_indices = json.load(f)
@@ -30,21 +27,29 @@ def image_testing(model_path, image_path, image_size):
     predictions = model.predict(img_array)
     predicted_class_idx = np.argmax(predictions)
     predicted_class_name = index_to_class[predicted_class_idx]
+    confidence_score = predictions[0][predicted_class_idx]*100
+
+    top_3_indices = np.argsort(predictions[0])[-3:][::-1]
+    top_3_results = [(index_to_class[i], predictions[0][i]*100) for i in top_3_indices]
 
     # Display the image with the predicted class
     plt.figure(figsize=(6, 6))
     plt.imshow(load_img(image_path))
-    plt.title(f"Predicted Class: {predicted_class_name}", fontsize=14)
+    plt.title(f"Predicted Class: {predicted_class_name} ({confidence_score:.2f}%)", fontsize=14)
     plt.axis('off')
     plt.show()
 
-    return predicted_class_name
+    print("Top 3 Predictions:")
+    for class_name, score in top_3_results:
+        print(f"{class_name}: {score:.2f}%")
+
+    return predicted_class_name, confidence_score
 
 # Paths
 model_path = "Mushrooms_model_3.h5"  
-image_path = "MushroomAnalyzer/test/marasmius_griseoradiatus.jpg"
-image_size = (224, 224)
+image_path = "test/stropharia_rugosaannulata.jpg"
+image_size = (400, 400)
 
 # Test and display of the image
-predicted_class = image_testing(model_path, image_path, image_size)
-print(f"Predicted Class: {predicted_class}")
+predicted_class, confidence = image_testing(model_path, image_path, image_size)
+print(f"Predicted Class: {predicted_class} with {confidence:.2f}% confidence")

@@ -2,9 +2,9 @@ import os
 import json 
 import tensorflow as tf
 from keras.models import load_model
-#from keras.applications import Adam
-from keras.callbacks import EarlyStopping, ModelCheckpoint
-from keras.applications import MobileNetV2
+from keras.optimizers import Adam
+from keras.callbacks import EarlyStopping, ModelCheckpoint, ReduceLROnPlateau
+from keras.applications import MobileNetV2, ResNet50
 
 
 import matplotlib.pyplot as plt
@@ -17,21 +17,21 @@ from functions.dataloader import load_dataset
 from functions.accuracy_and_loss import plot_loss, plot_accuracy, plot_training_history
 from functions.training import train_mushrooms_model, evaluate_mushrooms_model
 from functions.prediction import test_model
-#from functions.modelCNN import model_1
+from functions.modelCNN import model_1
 
 
 def main():
     # Main directories
     source_dir = "Dataset/MIND.Funga_Dataset"                               # Source dataset directory
-    train_dir = "MushroomAnalyzer/Dataset/Mushroom_Dataset_Training"        # Training set directory
-    val_dir = "MushroomAnalyzer/Dataset/Mushroom_Dataset_Validation"        # Validation set directory
+    train_dir = "Dataset/Mushroom_Dataset_Training"        # Training set directory
+    val_dir = "Dataset/Mushroom_Dataset_Validation"        # Validation set directory
 
     # Split the dataset
     #split_dataset(source_dir, train_dir, val_dir, test_ratio=0.2)
 
   
     # Load training and validation datasets
-    image_size = (224, 224)  # Required image dimensions for the model
+    image_size = (400, 400)  # Required image dimensions for the model
     batch_size = 32          # Batch size for training
     print("Loading training and validation datasets")
     train_set, val_set = load_dataset(train_dir, val_dir, image_size, batch_size)
@@ -48,7 +48,7 @@ def main():
 
     # Inizialize ImageNet model
     print("Creating the model")
-    base_model = MobileNetV2(weights='imagenet', include_top=False, input_shape=(224, 224, 3))
+    base_model = MobileNetV2(weights='imagenet', include_top=False, input_shape=(400, 400, 3))
     for layer in base_model.layers:
         layer.trainable = False  # Freeze pre-trained layers
 
@@ -60,13 +60,17 @@ def main():
     output = tf.keras.layers.Dense(len(train_set.class_indices), activation='softmax')(x)
     model = tf.keras.models.Model(inputs=base_model.input, outputs=output)
 
+    optimizer = Adam(learning_rate=0.001)
+    lr_scheduler = ReduceLROnPlateau(monitor='val_loss', factor=0.5, patience=3, verbose=1)
+
     # Compile the model
-    model.compile(optimizer=tf.keras.optimizers.Adam(lr=0.001), loss='categorical_crossentropy', metrics=['accuracy'])
+    model.compile(optimizer=optimizer, loss='categorical_crossentropy', metrics=['accuracy'])
+    model.summary()
 
     # Training configuration
-    num_epochs = 3
+    num_epochs = 30
     patience = 5
-    model_num = 4
+    model_num = 6
 
     # Configure the callbacks
     early_stopping_callback = EarlyStopping(
@@ -110,7 +114,7 @@ def main():
 
     # Test an image
     print("Testing an image")
-    test_image_path = "MushroomAnalyzer/test/tulostoma_exasperatum.jpg"  # Path of the test image
+    test_image_path = "test/tulostoma_exasperatum.jpg"  # Path of the test image
     predicted_class = test_model(model_path, train_set, image_size, test_image_path)
     print(f"Prediction: {predicted_class}")
 

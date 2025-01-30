@@ -35,7 +35,7 @@ def test_model(model, train_set, input_size, test_image_path):
     predicted_class = class_mapping[predicted_class_index]
 
     # Display the result
-    plt.title(f"Prediction: {predicted_class}")
-    plt.show()
+    #plt.title(f"Prediction: {predicted_class}")
+    #plt.show()
 
     return predicted_class
