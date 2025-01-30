@@ -11,3 +11,5 @@
 - **Computer Vision**: Leveraging Convolutional Neural Networks (CNNs) for precise image recognition.
 - **Natural Language Processing**: NLP models to provide contextual information about mushroom species.
 - **Frameworks**: Built using OpenCV, [ADD OTHER FRAMEWORKS]
+
+## Pre-trained Model https://drive.google.com/drive/folders/1g339tppzbsfOpfoss9sCcFP3Injv44zM?usp=sharing
