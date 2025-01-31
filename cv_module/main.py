@@ -4,7 +4,7 @@ import tensorflow as tf
 from keras.models import load_model
 from keras.optimizers import Adam
 from keras.callbacks import EarlyStopping, ModelCheckpoint, ReduceLROnPlateau
-from keras.applications import MobileNetV2, ResNet50
+from keras.applications import MobileNetV2
 
 
 import matplotlib.pyplot as plt
@@ -22,9 +22,9 @@ from functions.modelCNN import model_1
 
 def main():
     # Main directories
-    source_dir = "Dataset/MIND.Funga_Dataset"                               # Source dataset directory
-    train_dir = "Dataset/Mushroom_Dataset_Training"        # Training set directory
-    val_dir = "Dataset/Mushroom_Dataset_Validation"        # Validation set directory
+    source_dir = "./Dataset/MIND.Funga_Dataset"                               # Source dataset directory
+    train_dir = "./Dataset/Mushroom_Dataset_Training"        # Training set directory
+    val_dir = "./Dataset/Mushroom_Dataset_Validation"        # Validation set directory
 
     # Split the dataset
     #split_dataset(source_dir, train_dir, val_dir, test_ratio=0.2)
@@ -114,7 +114,7 @@ def main():
 
     # Test an image
     print("Testing an image")
-    test_image_path = "test/tulostoma_exasperatum.jpg"  # Path of the test image
+    test_image_path = "./cv_module/test/tulostoma_exasperatum.jpg"  # Path of the test image
     predicted_class = test_model(model_path, train_set, image_size, test_image_path)
     print(f"Prediction: {predicted_class}")
 
