@@ -6,165 +6,222 @@ import csv
 import time
 import pandas as pd
 import logging
-from selenium import webdriver
-from selenium.webdriver.firefox.service import Service
-from selenium.webdriver.common.by import By
-from selenium.webdriver.firefox.options import Options
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-from webdriver_manager.firefox import GeckoDriverManager
 
-# Funzione di normalizzazione del nome della specie
+
+#################################################################################
+
+
+### Normalization Functions: used to format the name correctly in the URL ###
+
+# Normalize species name for First Nature
 def normalize_species_name_firstnature(name):
     return name.strip().replace(" ", "-").lower()
 
+### Normalize species name for other scraping functions
 def normalize_species_name(name):
     return name.strip().replace(" ", "_").lower()
 
+
+#################################################################################
+
+
+### Scraping Functions: get information
+
+# Function to scrape data from First Nature
 def scrape_first_nature(species_name):
-    driver = None  # Variabile per tracciare il driver
-
     try:
-        # Impostazione di Selenium per usare Firefox
-        options = Options()
-        options.add_argument("--headless")  # Esegui in modalità headless (senza finestra del browser)
-
-        # Crea una nuova istanza del driver Firefox con GeckoDriverManager
-        driver = webdriver.Firefox(service=Service(GeckoDriverManager().install()), options=options)
-        
+        # Create the URL for the specific species page on First Nature
         base_url = "https://www.first-nature.com/fungi/"
-        # Costruisci l'URL dinamico per la specie
-        url = f"{base_url}{normalize_species_name_firstnature(species_name)}.php"
-        driver.get(url)
+        species_url = f"{base_url}{normalize_species_name_firstnature(species_name)}.php"
+        headers = {"User-Agent": "MushroomAnalyzer/1.0"}
 
-        # Attendere che la pagina si carichi completamente (usiamo un'attesa esplicita)
-        wait = WebDriverWait(driver, 10)
+        # Send the GET request to the First Nature page
+        response = requests.get(species_url, headers=headers)
+        response.raise_for_status()
 
-        # Log per debug: verificare che la pagina sia stata caricata
-        logging.info(f"Pagina caricata per {species_name}. Attendo l'elemento che contiene la descrizione generale.")
+        # Parse the HTML content of the page
+        soup = BeautifulSoup(response.text, 'html.parser')
 
-        try:
-            # Cerca il primo paragrafo dopo l'intestazione principale che potrebbe contenere la descrizione generale
-            first_paragraph = driver.find_element(By.XPATH, "//div[@class='content']//p[1]")  # Prende il primo paragrafo
+        # Get all the paragraphs
+        paragraphs = soup.find_all('p')
 
-            # Estrai il testo del primo paragrafo
-            general_description = first_paragraph.text.strip() if first_paragraph else None
+        if len(paragraphs) > 2:
+            # Check if the page is valid and not an error page
+            if (soup.find("h1").get_text()) != "Oops - sorry! Something is wrong...":
+                
+                # The third paragraph of each page should contain the description
+                description = paragraphs[3].get_text(strip=True)
 
-            # Log per il debug: vedere cosa è stato estratto
-            logging.info(f"Descrizione generale estratta per {species_name}: {general_description[:500]}...")  # Mostra i primi 500 caratteri
-
-            # Restituisci la descrizione generale
-            return general_description if general_description else None
-        except Exception as e:
-            logging.error(f"Errore nel trovare la descrizione generale per {species_name}: {e}")
+        else:
+            logging.warning(f"Description not found for {species_name} on First Nature")
             return None
-    except Exception as e:
-        logging.error(f"Errore nello scraping di First Nature per {species_name}: {e}")
-        return None
-    finally:
-        if driver:
-            driver.quit()  # Assicurati di chiudere il driver dopo l'esecuzione
+        
+        # Clean up the description by removing the species name
+        clean_text = remove_species_name(description[:500], species_name)
+        return clean_text
 
+    except Exception as e:
+        logging.error(f"Error while scraping the page {species_url}: {e}")
+        return None
+
+# Function to scrape data from Wikipedia
 def scrape_wikipedia(species_name):
     try:
-        user_agent = "MyFungiBot/1.0"
+        user_agent = "MushroomAnalyzer/1.0"
         headers = {"User-Agent": user_agent}
+
+        # Use Wikipedia API
         wiki = wikipediaapi.Wikipedia('en', headers=headers)
         
+        # Fetch the page of the species on Wikipedia
         page = wiki.page(species_name)
         if not page.exists():
             return None
         
-        # Restituiamo direttamente i primi 500 caratteri (puoi regolare questo valore)
-        return page.summary[:500]
+        # Return the first 500 characters of the summary and remove species name in the text 
+        clean_text = remove_species_name(page.summary[:500], species_name)
+        return clean_text
     
     except Exception as e:
-        logging.error(f"Errore nello scraping di Wikipedia per {species_name}: {e}")
-        return None
+        logging.error(f"Error while scraping Wikipedia for {species_name}: {e}")
+    return None
 
+# Function to scrape data from Mushroom Expert
 def scrape_mushroom_expert(species_name):
     try:
+        # Create the URL for the specific species page on Mushroom Expert
         base_url = "https://www.mushroomexpert.com/"
         url = f"{base_url}{normalize_species_name(species_name)}.html"
-        headers = {"User-Agent": "MyFungiScraper/1.0"}
+        headers = {"User-Agent": "MushroomAnalyzer/1.0"}
+        
+        # Send the GET request to the Mushroom Expert page
         response = requests.get(url, headers=headers)
         response.raise_for_status()
 
+        # Parse the HTML content of the page
         soup = BeautifulSoup(response.text, 'html.parser')
 
-        # Trova la sezione con la descrizione, subito dopo "Description:"
+        # Find the description section
         description_section = soup.find('p', string=lambda text: text and 'Description:' in text)
 
         if description_section:
-            # Trova tutti i paragrafi successivi alla descrizione
+            # Collect the paragraphs that follow the description
             description = []
             next_sibling = description_section.find_next('p')
             
+            # Stop when "REFERENCES" occurs
             stop_phrase = "REFERENCES"
+
             while next_sibling:
-                paragraph_text = next_sibling.get_text(strip=True)
+                paragraph_text = next_sibling.get_text(strip=True) 
+            
                 if stop_phrase in paragraph_text:
-                    break 
+                    break
+            
                 description.append(paragraph_text)
                 next_sibling = next_sibling.find_next('p')
             
+            # Join the paragraphs in a single text block
             description_text = "\n".join(description)
-            return description_text
+
+        # Clean up the description by removing the species name
+            clean_text = remove_species_name(description_text[:500], species_name)
+            return clean_text
+
         else:
-            logging.warning(f"Descrizione non trovata per {species_name} su MushroomExpert")
-            return None
-    except Exception as e:
-        logging.error(f"Errore nello scraping di MushroomExpert per {species_name}: {e}")
+            logging.warning(f"Description not found for {species_name} on MushroomExpert")
         return None
-
-def load_species_from_csv(path):
-    try:
-        data = pd.read_csv(path)
-        data.columns = data.columns.str.lower()
-        if 'species' not in data.columns:
-            raise ValueError("Il file CSV deve contenere una colonna chiamata 'species'")
-        return data['species'].tolist()
     except Exception as e:
-        logging.error(f"Errore durante la lettura del file CSV: {e}")
-        return []
-    
-# Funzione per salvare i risultati in un CSV
-def save_results_to_csv(results, output_path):
-    try:
-        # Creiamo un DataFrame dai risultati
-        df = pd.DataFrame(results, columns=["Source", "Name", "Description"])
-        df.to_csv(output_path, index=False)
-        logging.info(f"Risultati salvati con successo in {output_path}")
-    except Exception as e:
-        logging.error(f"Errore durante il salvataggio dei risultati in CSV: {e}")
+        logging.error(f"Error while scraping MushroomExpert for {species_name}: {e}")
+    return None
 
-# Funzione principale per eseguire lo scraping per tutte le specie e salvarlo nel CSV
+# Function for scraping from all the sources and saving results
 def scrape_and_save(species_csv_path, output_csv_path):
+    # Load the list of species from the provided CSV file
     species_list = load_species_from_csv(species_csv_path)
-    results = []
+    results = []  # List to store the scraping results
 
     for species in species_list:
-        time.sleep(1)
-
-        logging.info(f"Avvio dello scraping su First Nature per la specie: {species}")
+        
+        # Pause to avoid overloading the server
+        time.sleep(1)  
+        
+        # Scrape data from each source
+        logging.info(f"Starting scraping on First Nature for the species: {species}")
         content = scrape_first_nature(species)
         if content:
             results.append(["First Nature", species, content])
-
-        logging.info(f"Avvio dello scraping su Wikipedia per la specie: {species}")
+        
+        logging.info(f"Starting scraping on Wikipedia for the species: {species}")
         content = scrape_wikipedia(species)
         if content:
             results.append(["Wikipedia", species, content])
         
-        logging.info(f"Avvio dello scraping su Mushroom Expert per la specie: {species}")
+        logging.info(f"Starting scraping on Mushroom Expert for the species: {species}")
         content = scrape_mushroom_expert(species)
         if content:
             results.append(["Mushroom Expert", species, content])
         
-        
-    # Salviamo i risultati nel nuovo CSV
+    # Save all the results in the specified output CSV file
     save_results_to_csv(results, output_csv_path)
 
-# Esegui lo scraping e salva i risultati
-logging.basicConfig(level=logging.INFO)  # Impostiamo il livello di log a INFO
-scrape_and_save("nlp_module/fungi_info.csv", "nlp_module/fungi_dataset.csv")
+# Function to remove the species name from a given text 
+def remove_species_name(text, name):
+    normalized_name = normalize_species_name(name)
+    text_without_name = text.replace(name, '').replace(normalized_name, '').strip()
+    return text_without_name
+
+
+#################################################################################
+
+### CSV Functions
+
+### Load species names from a CSV file
+
+# First Implementation:
+# image_dir = './Dataset/MIND.Funga_Dataset'
+# species_list = [folder for folder in os.listdir(image_dir) if os.path.isdir(os.path.join(image_dir, folder))]
+# Wikipedia scraping identified only 38 species out of 500, so we will proceed to scrape data from other sites only for those 38 species.
+
+def load_species_from_csv(path):
+    try:
+        # Read the CSV file with species names (old wikipedia scraping csv)
+        data = pd.read_csv(path)
+        
+        # Normalize column names to lowercase
+        data.columns = data.columns.str.lower()  
+        
+        if 'species' not in data.columns:  
+            raise ValueError("The CSV file must contain a column named 'species'")
+        
+        # Return the list of species
+        return data['species'].tolist()
+    except Exception as e:
+        logging.error(f"Error while reading the CSV file: {e}")
+        return []
+    
+# Function for saving results in csv file
+def save_results_to_csv(results, output_path):
+    try:
+        # Create a DataFrame from the results list and save it as a CSV
+        df = pd.DataFrame(results, columns=["Source", "Name", "Description"])
+        
+        # Write to CSV without index
+        df.to_csv(output_path, index=False)
+        logging.info(f"Success: {output_path}")
+    except Exception as e:
+        logging.error(f"Error while saving results: {e}")
+
+
+#################################################################################
+
+def main():
+    # Set up logging to track the progress
+    logging.basicConfig(level=logging.INFO)
+
+    # Start the scraping process and save the results to a CSV file
+    scrape_and_save("dataset/fungi_info.csv", "dataset/fungi_dataset.csv")
+
+if __name__ =="__main__":
+    main()
+

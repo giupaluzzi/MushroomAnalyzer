@@ -1,10 +1,12 @@
 import pandas as pd
 
-# Load data from csv
+# Function to load data from a CSV file
 def load_data(path):
     try:
         data = pd.read_csv(path)
-        return data
+        
+        # Return the data read from the CSV
+        return data  
     except FileNotFoundError:
-        print(f"Errore: il file {path} non è stato trovato.")
+        print(f"Error: the file {path} was not found.")
         return None
