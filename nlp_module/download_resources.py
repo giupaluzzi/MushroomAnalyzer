@@ -5,3 +5,4 @@ def download_resources():
     nltk.download('stopwords')  # For stop words
     nltk.download('wordnet')    # For WordNet lexical database
     nltk.download('omw-1.4')    # For multilingual WordNet (useful for synonym generation)
+    nltk.download('punkt')      # For sentence and word tokenization
