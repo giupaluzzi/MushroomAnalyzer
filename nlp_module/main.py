@@ -46,9 +46,9 @@ def main():
     model = train_and_evaluate_model(X, y)
 
     # Example Prediction
-    r = ' triking mushroom recognized by its bright red cap with white spots.'
-    pred =  model.predict([r])
-    print(pred)
+    ### r = ' triking mushroom recognized by its bright red cap with white spots.'
+    ### pred =  model.predict([r])
+    ### print(pred)
     
 if __name__ =="__main__":
     main()

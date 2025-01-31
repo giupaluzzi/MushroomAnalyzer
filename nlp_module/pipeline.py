@@ -32,9 +32,9 @@ def train_and_evaluate_model(X,y):
     model.fit(data_train, target_train)
 
     # Predict the labels for the test data
-    prediction = model.predict(data_test)
+    predictions = model.predict(data_test)
 
     # Print the classification report to evaluate the performance of the model
-    print(classification_report(target_test, prediction, zero_division=0))
+    print(classification_report(target_test, predictions, zero_division=0))
     
     return model
