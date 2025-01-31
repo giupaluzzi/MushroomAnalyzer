@@ -220,7 +220,7 @@ def main():
     logging.basicConfig(level=logging.INFO)
 
     # Start the scraping process and save the results to a CSV file
-    scrape_and_save("dataset/fungi_info.csv", "dataset/fungi_dataset.csv")
+    scrape_and_save("nlp_module/dataset/fungi_names.csv", "nlp_module/dataset/fungi_dataset.csv")
 
 if __name__ =="__main__":
     main()
