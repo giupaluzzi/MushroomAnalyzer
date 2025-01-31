@@ -9,16 +9,17 @@ This function would save the augmented dataset into a CSV file.
 
 
 import pandas as pd
+
 def save_augmented_data(X, y, output_csv_path):
-    # Crea un DataFrame dai dati augmentati
+    # Create a DataFrame from the augmented data
     augmented_data = pd.DataFrame({
-        'Description': X,  # Le descrizioni augmentate
-        'Name': y          # Le etichette (i nomi dei funghi)
+        'Description': X,  # Augmented descriptions
+        'Name': y          # Labels (the mushroom names)
     })
     
-    # Salva il DataFrame nel CSV
+    # Save the DataFrame to a CSV file
     augmented_data.to_csv(output_csv_path, index=False)
-    print(f"Dati augmentati salvati in {output_csv_path}")
+    print(f"Augmented data saved to {output_csv_path}")
 
 '''
 def main():
