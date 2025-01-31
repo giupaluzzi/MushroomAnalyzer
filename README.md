@@ -12,4 +12,6 @@
 - **Natural Language Processing**: NLP models to provide contextual information about mushroom species.
 - **Frameworks**: Built using OpenCV, [ADD OTHER FRAMEWORKS]
 
-## Pre-trained Model https://drive.google.com/drive/folders/1g339tppzbsfOpfoss9sCcFP3Injv44zM?usp=sharing
+## Pre-trained Model 
+
+https://drive.google.com/drive/folders/1g339tppzbsfOpfoss9sCcFP3Injv44zM?usp=sharing
