@@ -9,7 +9,7 @@
 ## Technologies Used
 - **Computer Vision**: Leveraging Convolutional Neural Networks (CNNs) for precise image recognition.
 - **Natural Language Processing**: NLP models to provide contextual information about mushroom species.
-- **Frameworks and Libreries**: Built using OpenCV, scikit-learn, pandas, matplotlib, numpy, pytorch, seaborn, tensorflow, T5, nltk.
+- **Frameworks and Libreries**: Built using OpenCV, Scikit-learn, pandas, Matplotlib, NumPy, PyTorch, Seaborn, TensorFlow, T5, nltk.
 
 ## Pre-trained Model 
 
